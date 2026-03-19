@@ -1,165 +1,318 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Color Archive</title>
+    <title>Intercolor Color Card</title>
     <style>
-        :root {
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --text-muted: #636e72;
-            --accent: #0984e3;
-        }
+    /* 1. THE DEFAULT STATE (At the very top) */
+    :root {
+        --bg-color: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-main: #2d3436;
+        --text-muted: #636e72;
+        --accent: #0984e3;
         
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            margin: 0;
-        }
+    }
+    .hero-section, .content {
+        margin-top: 120px; 
+}
+    body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background-color: var(--bg-color);
+        padding-bottom: 120px;
+        color: var(--text-main);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 40px;
+        margin: 0;
+    }
+    @media (max-width: 600px) {
+    .navbar {
+        flex-direction: column; /* Stacks elements vertically */
+        height: auto;           /* Allows the header to grow taller */
+        padding: 15px 10px;
+    }
 
-        /* --- SEARCH SECTION --- */
-        .search-container {
-            margin-bottom: 40px;
+    .nav-left, .nav-center {
+        flex: none;             /* Stops them from fighting for equal width */
+        width: 100%;            /* Makes them take up the full width */
+        justify-content: center; /* Centers everything on mobile */
+        margin-bottom: 10px;    /* Adds space between the stacked items */
+    }
+    .nav-right {
+        flex: none;             /* Stops them from fighting for equal width */
+        width: 100%;            /* Makes them take up the full width */
+        justify-content: center; /* Centers everything on mobile */
+        margin-bottom: 10px; 
+        display: none;
+    }
+
+    .search-bar {
+        width: 90%;             /* Makes the search bar wider for easier tapping */
+    }
+
+    h1 {
+        font-size: 1.2rem;      /* Shrinks the title slightly */
+    }
+    .fab {
+        bottom: 20px;
+        right: 20px;
+        width: 65px; /* Slightly larger for thumbs */
+        height: 65px;
+    }
+    }
+    .navbar {
+        position: fixed; /* Fixed works better for this specific transition */
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        box-sizing: border-box;
+        
+        
+        /* Start fully transparent */
+        background-color: rgba(255, 255, 255, 0);
+        backdrop-filter: blur(0px);
+        
+        /* Smooth transition for the change */
+        transition: background-color 0.4s ease, backdrop-filter 0.4s ease, padding 0.4s ease;
+    }
+
+    /* 2. THE SCROLLED STATE (Triggered by JavaScript) */
+    .navbar.scrolled {
+        background-color: rgba(255, 255, 255, 0.7); /* Frosted white */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 10px 20px; /* Shrinks slightly for a sleek look */
+        border-bottom: 0.05px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Layout Containers */
+    .nav-left, .nav-right { flex: 1; }
+    .nav-center { 
+        font-family: 'Inter', -apple-system, sans-serif;
+        background-color: transparent;
+        color: var(--text-main);
+        flex: 2; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center;
+        margin: 0;
+    }
+
+    .search-bar {
+        width: 100%;
+        padding: 14px 24px;
+        border-radius: 12px;
+        border: 1px solid #dfe6e9;
+        font-size: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        outline: none;
+    }
+    .search-container {
+            margin-bottom: 100px;
             width: 100%;
             max-width: 500px;
         }
         
         
-        #colorSearch {
-            width: 100%;
-            padding: 14px 24px;
-            border-radius: 12px;
-            border: 1px solid #dfe6e9;
-            font-size: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            outline: none;
-        }
+    #colorSearch {
+        width: 100%;
+        padding: 14px 24px;
+        border-radius: 12px;
+        border: 1px solid #dfe6e9;
+        font-size: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        outline: none;
+    }
 
-        #colorSearch:focus { border-color: var(--accent); }
-        
-        /* --- GALLERY GRID --- */
-        #colorGrid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 25px;
-            width: 100%;
-            max-width: 1100px;
-        }
+    #colorSearch:focus { border-color: var(--accent); }
 
-        .color-card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    /* --- GALLERY GRID --- */
+    #colorGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 25px;
+        width: 100%;
+        max-width: 1100px;
+        padding-top: 150px;
+    }
 
-        .color-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
-        }
+    .color-card {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
 
-        /* --- THE SWATCH --- */
-        .swatch {
-            width: 100%;
-            height: 140px;
-            border-radius: 40px 0 40px 0;
-            margin-bottom: 15px;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
+    .color-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+    }
 
-        /* --- LEFT/RIGHT TEXT ALIGNMENT --- */
-        .card-header {
-            display: flex;
-            justify-content: space-between; /* Pushes name left, ID right */
-            align-items: center;
-            width: 100%;
-            margin-bottom: 4px;
-        }
+    /* --- THE SWATCH --- */
+    .swatch {
+        width: 100%;
+        height: 140px;
+        border-radius: 40px 0 40px 0;
+        margin-bottom: 15px;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
 
-        .color-name {
-            font-weight: 700;
-            font-size: 1rem;
-            text-align: left;
-        }
+    /* --- LEFT/RIGHT TEXT ALIGNMENT --- */
+    .card-header {
+        display: flex;
+        justify-content: space-between; /* Pushes name left, ID right */
+        align-items: center;
+        width: 100%;
+        margin-bottom: 4px;
+    }
 
-        .color-number {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            background: #f1f2f6;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
+    .color-name {
+        font-weight: 700;
+        font-size: 1rem;
+        text-align: left;
+    }
 
-        .color-rgb {
-            display: block;
-            text-align: left;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: 'Courier New', Courier, monospace;
-        }
+    .color-number {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        background: #f1f2f6;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
 
-        /* --- MODAL --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+    .color-rgb {
+        display: block;
+        text-align: left;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-family: 'Courier New', Courier, monospace;
+    }
 
-        .modal-content {
-            background: white;
-            padding: 40px;
-            border-radius: 24px;
-            max-width: 450px;
-            width: 90%;
-            position: relative;
-        }
+    /* --- MODAL --- */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
 
-        .close-btn {
-            position: absolute;
-            top: 20px; right: 25px;
-            font-size: 24px; cursor: pointer; color: #b2bec3;
-        }
+    .modal-content {
+        background: white;
+        padding: 40px;
+        border-radius: 24px;
+        max-width: 450px;
+        width: 90%;
+        position: relative;
+    }
 
-        .modal-swatch {
-            width: 120px; height: 120px;
-            border-radius: 40px 0 40px 0;
-            margin-bottom: 25px;
-        }
+    .close-btn {
+        position: absolute;
+        top: 20px; right: 25px;
+        width: 30px;
+        height: 30px;
+        border-radius: 100%;
+        font-size: 24px; cursor: pointer; color: #ff4757;
+    }
+
+    .modal-swatch {
+        width: 120px; height: 120px;
+        border-radius: 40px 0 40px 0;
+        margin-bottom: 25px;
+    }
+    /* The Floating Button */
+    .fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 2000; /* Higher than the navbar */
+    transition: transform 0.2s ease;
+    }
+
+    .fab:hover { transform: scale(1.1); }
+
+    /* The Full-Screen Overlay Menu */
+    /* DEFAULT (Desktop): Centered Box */
+.info-menu {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 3000;
+  justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+}
+
+.menu-content {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 400px;
+  max-width: 90%;
+}
+
+/* MOBILE (Screen < 600px): Bottom Sheet */
+@media (max-width: 600px) {
+  .info-menu {
+    align-items: flex-end; /* Pushes the menu to the bottom */
+  }
+
+  .menu-content {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0; /* Rounds only the top */
+    padding-bottom: 50px; /* Space for phone "home" bars */
+  }
+}
+
+    /* .close-btn {
+    margin-top: 15px;
+    padding: 8px 20px;
+    cursor: pointer;
+    border: none;
+    background: #ff4757;
+    color: white;
+    border-radius: 5px;
+    } */
     </style>
-</head>
-<!-- <header>
-    <img src="https://static.wixstatic.com/media/c1596f_d9aec399a7d845e8b23ebeac3a3a4049~mv2.png" alt="Corner Logo" class="top-left-img">
-  
-    <div class="center-group">
-      
-    </div>
-  
-    <div style="width: 50px;"></div> 
-  </header> -->
-<body>
-    <h2> Color Card</h2>
+    </head>
+    <body>
 
-    <div class="search-container">
+    <header class="navbar" id="myNavbar">
+    <div class="nav-left"></div>
+    <div class="nav-center">
+        <h1>Color Card</h1>
         <input type="text" id="colorSearch" placeholder="Type color name..." onkeyup="filterColors()">
     </div>
-
+    <div class="nav-right"></div>
+    </header>
     <div id="colorGrid">
-        </div>
+    </div>
 
     <div id="infoModal" class="modal-overlay" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
@@ -172,11 +325,20 @@
         </div>
     </div>
 
+    <!-- <div class="hero-section">
+    <h2>Scroll down to see the magic ✨</h2>
+    </div> -->
+
+    <!-- <div class="content">
+    <p>Now the header has a blurred background!</p>
+    </div> -->
+
     <script>
-        /* ============================================================
+
+    /* ============================================================
            COLOR DATABASE
            ============================================================ */
-        const myColors = [
+           const myColors = [
             {
                 id: "#856",
                 name: "Blizzard",
@@ -802,6 +964,62 @@
         }
 
         renderColors(myColors);
+    // This script listens for the scroll event
+// 1. SCROLL HANDLER: Handles Navbar transparency/blur
+    window.onscroll = function() {
+    const navbar = document.getElementById("myNavbar");
+    
+    // If scrolled more than 50px, add the 'scrolled' class
+    if (window.pageYOffset > 50) {
+        navbar.classList.add("scrolled");
+    } else {
+        navbar.classList.remove("scrolled");
+    }
+    };
+
+    // 2. TOGGLE HANDLER: Handles the Floating Info Menu
+    function toggleMenu() {
+    const menu = document.getElementById("infoMenu");
+    const isOpening = menu.style.display !== "flex";
+
+    // Toggle visibility
+    menu.style.display = isOpening ? "flex" : "none";
+
+    // MOBILE OPTIMIZATION: Stop the background from scrolling when menu is open
+    if (isOpening) {
+        document.body.style.overflow = "hidden";
+    } else {
+        document.body.style.overflow = "auto";
+    }
+    }
+
+// 3. AUTO-RESIZER: Ensures content space is correct on load/resize
+function updateHeaderHeight() {
+  const navbar = document.getElementById("myNavbar");
+  if (navbar) {
+    const height = navbar.offsetHeight;
+    document.documentElement.style.setProperty('--header-height', height + 'px');
+  }
+}
+
+window.addEventListener('load', updateHeaderHeight);
+window.addEventListener('resize', updateHeaderHeight);
     </script>
-</body>
-</html>
+    <button class="fab" onclick="toggleMenu()">i</button>
+
+    <div id="infoMenu" class="info-menu">
+      <div class="menu-content">
+        <h3>How To Use</h3>
+        <hr>
+        <p>Use the search bar to look for the colours of your choice</p>
+        <p>Click on the color card to find more information about its product and size availability</p>
+        <p>Abbreviations used in the digital color card are explained below:</p>
+        <p><strong>SKE:</strong> InterSilk Emulsion</p>
+        <p><strong>IME:</strong> Intercolor Matt Emulsion</p>
+        <p><strong>IMT:</strong> Intercolor Matt Textured</p>
+        <p>If you have any questions, don't hesitate to consult our website or reach out to our customer service team!</p>
+        <button onclick="toggleMenu()" class="close-btn">&times;</button>
+      </div>
+    </div>
+    </body>
+    </html>
