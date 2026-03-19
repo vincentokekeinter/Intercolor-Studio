@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Color Archive</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --accent: #0984e3;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        /* --- SEARCH SECTION --- */
+        .search-container {
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        
+        #colorSearch {
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: 1px solid #dfe6e9;
+            font-size: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            outline: none;
+        }
+
+        #colorSearch:focus { border-color: var(--accent); }
+        
+        /* --- GALLERY GRID --- */
+        #colorGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .color-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- THE SWATCH --- */
+        .swatch {
+            width: 100%;
+            height: 140px;
+            border-radius: 40px 0 40px 0;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* --- LEFT/RIGHT TEXT ALIGNMENT --- */
+        .card-header {
+            display: flex;
+            justify-content: space-between; /* Pushes name left, ID right */
+            align-items: center;
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .color-name {
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: left;
+        }
+
+        .color-number {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            background: #f1f2f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .color-rgb {
+            display: block;
+            text-align: left;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 450px;
+            width: 90%;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 25px;
+            font-size: 24px; cursor: pointer; color: #b2bec3;
+        }
+
+        .modal-swatch {
+            width: 120px; height: 120px;
+            border-radius: 40px 0 40px 0;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<!-- <header>
+    <img src="https://static.wixstatic.com/media/c1596f_d9aec399a7d845e8b23ebeac3a3a4049~mv2.png" alt="Corner Logo" class="top-left-img">
+  
+    <div class="center-group">
+      
+    </div>
+  
+    <div style="width: 50px;"></div> 
+  </header> -->
+<body>
+    <h2> Color Card</h2>
+
+    <div class="search-container">
+        <input type="text" id="colorSearch" placeholder="Type color name..." onkeyup="filterColors()">
+    </div>
+
+    <div id="colorGrid">
+        </div>
+
+    <div id="infoModal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modalSwatch" class="modal-swatch"></div>
+            <h3 id="modalTitle" style="margin-top:0"></h3>
+            <p><strong>Paint Products Available:</strong> <span id="modalProd"></span></p>
+            <p><strong>Location:</strong> <span id="modalLoc"></span></p>
+            <p><strong>Sizes:</strong> <span id="modalSizes"></span></p>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           COLOR DATABASE
+           ============================================================ */
+        const myColors = [
+            {
+                id: "#856",
+                name: "Blizzard",
+                r: 205.7, g: 207.29, b: 218.42,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#819",
+                name: "Cyan",
+                r: 224.4, g: 255, b: 255,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#857",
+                name: "Cool Green",
+                r: 252.06, g: 254.4, b: 238.35,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+
+            {
+                id: "#857",
+                name: "Dynasty",
+                r: 173.19, g: 171.49, b: 185.03,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#810",
+                name: "Winter Blue",
+                r: 147.23, g: 230.71, b: 252.39,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#829",
+                name: "Aqua",
+                r: 246.29, g: 255, b: 251.01,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#844",
+                name: "Bluish Violet",
+                r: 195.43, g: 207.7, b: 229.17,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#817",
+                name: "Baby Violet",
+                r: 121.52, g: 184.86, b: 235.28,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#809",
+                name: "Intercolor Green",
+                r: 196.53, g: 207.06, b: 128.24,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#845",
+                name: "Irish Grape",
+                r: 163.53, g: 179.46, b: 205.87,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#851",
+                name: "Tan Olive",
+                r: 211, g: 201.51, b: 165.52,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#808",
+                name: "Love Green",
+                r: 202.49, g: 215.03, b: 91.27,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#826",
+                name: "Lilac",
+                r: 196.93, g: 164.39, b: 188.19,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#833",
+                name: "Olive Green",
+                r: 149.25, g: 130.44, b: 77.26,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#841",
+                name: "Mild Forest",
+                r: 99.31, g: 133.51, b: 135.14,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#867",
+                name: "Violane",
+                r: 196.64, g: 186.21, b: 229.80,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#831",
+                name: "Nigeria Green",
+                r: 57.2, g: 112.66, b: 55.47,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#842",
+                name: "Orchid Peach",
+                r: 255, g: 192.51, b: 126.61,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#839",
+                name: "Cool Pink",
+                r: 254.64, g: 245.98, b: 244.13,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#866",
+                name: "Cool Orange",
+                r: 255, g: 239.22, b: 224.45,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#802",
+                name: "Deep Cream",
+                r: 255, g: 240.73, b: 176.98,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#859",
+                name: "Ultra Pink",
+                r: 246.81, g: 208.38, b: 217.78,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#820",
+                name: "Blush Pink",
+                r: 255, g: 218.78, b: 192.63,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#869",
+                name: "Deep Orange",
+                r: 248.43, g: 125.99, b: 66.28,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#811",
+                name: "Rose Pink",
+                r: 245.63, g: 185.51, b: 183.61,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#834",
+                name: "Blush Orange",
+                r: 255, g: 189.95, b: 157.53,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (IME, IMT)"
+            },
+            {
+                id: "#838",
+                name: "Signal Orange",
+                r: 214.77, g: 101.35, b: 58.41,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#836",
+                name: "Pastel Peach",
+                r: 255, g: 253.16, b: 187.6,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#870",
+                name: "Golden Yellow",
+                r: 255, g: 169.91, b: 52.15,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#816",
+                name: "Russet",
+                r: 166.47, g: 98.64, b: 92.23,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE)"
+            },
+            {
+                id: "#827",
+                name: "Zinc Yellow",
+                r: 255, g: 217.03, b: 50.71,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#852",
+                name: "Taffy",
+                r: 234.23, g: 178.21, b: 217.38,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE)"
+            },
+            {
+                id: "#835",
+                name: "Traffic Red",
+                r: 197.13, g: 54.32, b: 50.71,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#865",
+                name: "Honey Yellow",
+                r: 210.62, g: 149.42, b: 24.55,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE)"
+            },
+            {
+                id: "#853",
+                name: "Magenta",
+                r: 164.97, g: 45.92, b: 118.46,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE)"
+            },
+            {
+                id: "#843",
+                name: "Flame Red",
+                r: 145, g: 46.86, b: 44.86,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE)"
+            },
+            {
+                id: "#803",
+                name: "Off White",
+                r: 255, g: 242.30, b: 218.95,
+                Prod: "SKE",
+                Loc: "Interior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#860",
+                name: "Jazmine",
+                r: 253.36, g: 250.67, b: 242.87,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#837",
+                name: "Dark Apple",
+                r: 247.63, g: 245.46, b: 221.96,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#823",
+                name: "Ivory",
+                r: 254.14, g: 247.98, b: 223.19,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#854",
+                name: "Light Almond",
+                r: 239.13, g: 226.38, b: 206.39,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#815",
+                name: "Minty Green",
+                r: 205.91, g: 210.19, b: 173.63,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#801",
+                name: "Magnolia",
+                r: 255, g: 235.94, b: 200.26,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#813",
+                name: "Symphony",
+                r: 249.29, g: 224.64, b: 210.44,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#862",
+                name: "Cool Blue",
+                r: 243.96, g: 253.29, b: 251.73,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#800",
+                name: "Vanilla",
+                r: 253.05, g: 208.65, b: 157.84,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#824",
+                name: "Dawn Pink",
+                r: 230.94, g: 174.80, b: 138.82,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#868",
+                name: "Misd",
+                r: 190.03, g: 237.95, b: 253.27,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#806",
+                name: "Mustard",
+                r: 201.92, g: 140.83, b: 132.39,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#814",
+                name: "Coral",
+                r: 231.75, g: 173.33, b: 102.73,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#848",
+                name: "Intercolor Blue",
+                r: 19.57, g: 85.55, b: 154.27,
+                Prod: "SKE",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE)"
+            },
+            {
+                id: "#849",
+                name: "Sand Beige",
+                r: 195.03, g: 149.99, b: 129.07,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#832",
+                name: "Beige Brown",
+                r: 191.89, g: 122.95, b: 91.45,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#840",
+                name: "Royal Stone",
+                r: 195.37, g: 174.20, b: 155.09,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#847",
+                name: "Biscuit Smoke",
+                r: 250.19, g: 232.39, b: 214.91,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#858",
+                name: "Cool Grey",
+                r: 238.64, g: 236.73, b: 227.07,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#863",
+                name: "Chest Nut",
+                r: 210.4, g: 197.10, b: 194.55,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#804",
+                name: "Parcament",
+                r: 238.49, g: 223.04, b: 188.91,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#821",
+                name: "Dove Grey",
+                r: 181.47, g: 178.64, b: 171.84,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#871",
+                name: "Antelope",
+                r: 164.95, g: 150.89, b: 142.93,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#828",
+                name: "Kalabashe",
+                r: 218.06, g: 199.28, b: 175.21,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#807",
+                name: "Silver Grey",
+                r: 200.33, g: 209.36, b: 211.67,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#864",
+                name: "Grey Beige",
+                r: 142.2, g: 119.22, b: 119.41,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#825",
+                name: "Wood Smoke",
+                r: 225.65, g: 189.05, b: 151.85,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#805",
+                name: "Slate Black",
+                r: 122.21, g: 121.38, b: 126.17,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#812",
+                name: "Mushroom",
+                r: 169.49, g: 126.52, b: 111.64,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#830",
+                name: "Beige",
+                r: 205.94, g: 167.68, b: 123.7,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#818",
+                name: "Pewter",
+                r: 124.23, g: 132.95, b: 140.59,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#861",
+                name: "Roof Red",
+                r: 167.37, g: 100.49, b: 84.45,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#846",
+                name: "French Beige",
+                r: 192.43, g: 165.96, b: 136.43,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#850",
+                name: "Hot Grey",
+                r: 85.16, g: 91.80, b: 98.33,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            },
+            {
+                id: "#822",
+                name: "Chocolate",
+                r: 75.69, g: 43.91, b: 39.28,
+                Prod: "SKE, IME, IMT",
+                Loc: "Interior & Exterior",
+                Sizes: "4L (SKE), 20L (SKE, IME, IMT)"
+            }
+
+        ];
+
+        function renderColors(data) {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+
+            data.forEach(color => {
+                const rgbString = `RGB(${color.r}, ${color.g}, ${color.b})`;
+                const card = document.createElement('div');
+                card.className = 'color-card';
+                card.onclick = () => openModal(color);
+                
+                card.innerHTML = `
+                    <div class="swatch" style="background-color: ${rgbString}"></div>
+                    <div class="card-header">
+                        <span class="color-name">${color.name}</span>
+                        <span class="color-number">${color.id}</span>
+                    </div>
+                    
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterColors() {
+            const term = document.getElementById('colorSearch').value.toLowerCase();
+            const filtered = myColors.filter(c => 
+                c.name.toLowerCase().includes(term) || 
+                c.id.toLowerCase().includes(term)
+            );
+            renderColors(filtered);
+        }
+
+        function openModal(color) {
+            document.getElementById('modalTitle').innerText = `${color.name} (${color.id})`;
+            document.getElementById('modalSwatch').style.backgroundColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+            document.getElementById('modalProd').innerText = color.Prod;
+            document.getElementById('modalLoc').innerText = color.Loc;
+            document.getElementById('modalSizes').innerText = color.Sizes;
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        renderColors(myColors);
+    </script>
+</body>
+</html>
